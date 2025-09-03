@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gembok Cinta</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
+        :root {
+            --bg-color: #ffe0f1;
+            --lock-color-dark: #d81b60;
+            --lock-color-medium: #f06292;
+            --title-color: #c2185b;
+            --glow-color: #82aaff;
+        }
+        body {
+            margin: 0;
+            font-family: 'Nunito', sans-serif;
+            background: radial-gradient(circle, var(--bg-color) 0%, #f8bbd0 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+        }
+        .page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .page.hidden {
+            opacity: 0;
+            transform: translateY(-20px);
+            pointer-events: none;
+        }
+        #padlock-page .container {
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            transform: scale(0.9);
+        }
+        #padlock-page .title {
+            font-size: 2em;
+            font-weight: 900;
+            color: var(--title-color);
+            text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color);
+            margin-bottom: 2rem;
+        }
+        #padlock-page .padlock { position: relative; width: 300px; margin: 0 auto; }
+        #padlock-page .shackle { position: relative; width: 140px; height: 120px; border-radius: 70px 70px 0 0; margin: 0 auto -50px auto; background: linear-gradient(180deg, #f8bbd0, var(--lock-color-medium)); box-shadow: inset 0 6px 10px rgba(0,0,0,0.1); }
+        #padlock-page .shackle::before { content: ''; position: absolute; top: 15px; left: 15px; right: 15px; bottom: 0; background: var(--bg-color); border-radius: 55px 55px 0 0; }
+        #padlock-page .heart { position: relative; width: 300px; height: 270px; background: transparent; box-shadow: none; }
+        #padlock-page .heart::before, #padlock-page .heart::after { content: ""; position: absolute; width: 170px; height: 270px; background: radial-gradient(circle at 50% 50%, var(--lock-color-medium), var(--lock-color-dark)); box-shadow: 0 10px 20px rgba(0,0,0,0.2), inset 0 5px 15px rgba(255,255,255,0.3); border-radius: 170px 170px 0 0; transform-origin: 0 100%; }
+        #padlock-page .heart::before { left: 150px; transform: rotate(-45deg); }
+        #padlock-page .heart::after { left: 0; transform: rotate(45deg); transform-origin: 100% 100%; }
+        #padlock-page .heart .gloss { position: absolute; width: 90%; height: 80%; left: 5%; top: 0; background: radial-gradient(ellipse at 40% 30%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 60%); z-index: 1; }
+        #padlock-page .dials-container { position: absolute; width: 100%; top: 55%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; gap: 1rem; z-index: 2; }
+        #padlock-page .dial { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; }
+        #padlock-page .arrow-btn { background: none; border: none; color: rgba(255,255,255,0.8); font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1; transition: transform 0.1s; }
+        #padlock-page .arrow-btn:active { transform: scale(0.8); }
+        #padlock-page .number-viewport { width: 60px; height: 60px; background-color: #c2185b; border-radius: 50%; box-shadow: inset 0 3px 6px rgba(0,0,0,0.3); overflow: hidden; position: relative; }
+        #padlock-page .number-reel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; color: white; font-size: 2rem; font-weight: 700; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+        #padlock-page .hint { margin-top: 1.5rem; color: #880e4f; font-size: 1rem; font-weight: 700; }
+        
+        #carousel-page {
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            
+            color: white;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            overflow-y: auto;
+        }
+        .header-text { 
+            font-size: 2.5em; 
+            font-weight: 900; 
+            text-shadow: 0 3px 5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 138, 201, 0.9);
+            margin-bottom: 1rem;
+        }
+        .sub-text { font-size: 1.5em; font-weight: 700; margin-top: -1.5rem; margin-bottom: 2.5rem; }
+        
+        .carousel-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            align-items: center;
+            max-width: 100%;
+        }
+
+        .scene { 
+            width: 180px; 
+            height: 210px; 
+            perspective: 1000px; 
+            cursor: grab; 
+        }
+        .scene:active { cursor: grabbing; }
+        .carousel { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
+        .carousel-panel { 
+            position: absolute; 
+            width: 180px; 
+            height: 210px; 
+            background-size: cover; 
+            background-position: center; 
+            border-radius: 15px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
+            cursor: pointer;
+        }
+        .carousel-panel:nth-child(1) { transform: rotateY(0deg) translateZ(180px); }
+        .carousel-panel:nth-child(2) { transform: rotateY(72deg) translateZ(180px); }
+        .carousel-panel:nth-child(3) { transform: rotateY(144deg) translateZ(180px); }
+        .carousel-panel:nth-child(4) { transform: rotateY(216deg) translateZ(180px); }
+        .carousel-panel:nth-child(5) { transform: rotateY(288deg) translateZ(180px); }
+        
+        #timer-page { 
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            
+            flex-direction: column; 
+            justify-content: flex-start; 
+            padding-top: 5vh; 
+            gap: 1rem; 
+            box-sizing: border-box;
+        }
+        #timer-page .hearts-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; }
+        #timer-page .heart-bg { position: absolute; font-size: 2rem; color: rgba(255, 255, 255, 0.5); animation: float-heart 15s linear infinite; }
+        @keyframes float-heart { 0% { transform: translateY(100vh) scale(1); } 100% { transform: translateY(-10vh) scale(1.5); } }
+        #timer-page .timer-title { font-size: 2em; font-weight: 900; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        #timer-page .profile-pic { width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 5px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 1rem; }
+        #timer-page .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+        #timer-page .timer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; width: 90%; max-width: 350px; }
+        #timer-page .timer-box { background-color: rgba(255, 255, 255, 0.7); padding: 0.8rem 0.5rem; border-radius: 15px; text-align: center; color: var(--title-color); }
+        #timer-page .timer-number { font-size: 2.5em; font-weight: 900; display: block; }
+        #timer-page .timer-label { font-size: 0.8em; font-weight: 700; text-transform: uppercase; }
+        .letter-container { margin-top: 1.5rem; cursor: pointer; }
+        .letter-icon { font-size: 4rem; color: var(--title-color); transition: transform 0.3s; }
+        .letter-icon:hover { transform: scale(1.1); }
+        .message-box {
+            background-color: white;
+            border: 2px solid var(--title-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem auto;
+            width: 80%;
+            max-width: 350px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: scaleY(0);
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transform-origin: top;
+            transition: transform 0.5s ease, max-height 0.5s ease, opacity 0.5s ease, padding 0.5s ease;
+        }
+        .message-box.open {
+            transform: scaleY(1);
+            max-height: 500px;
+            opacity: 1;
+            padding: 1.5rem;
+        }
+        .message-box p { margin: 0; color: #333; font-family: 'Nunito', sans-serif; font-weight: 700; }
+        .swal2-confirm { background-color: var(--lock-color-dark) !important; }
+        .swal2-title { color: var(--title-color) !important; }
+
+        #fullscreen-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #fullscreen-viewer.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #fullscreen-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+        #back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1.2em;
+            cursor: pointer;
+            z-index: 1001;
+            transition: background-color 0.3s ease;
+        }
+        #back-button:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* --- STYLE BARU UNTUK TOMBOL NAVIGASI --- */
+        .nav-arrow-btn {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            cursor: pointer;
+            z-index: 10;
+            animation: bounce 2.5s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            40% {
+                transform: translateX(-50%) translateY(-15px);
+            }
+            60% {
+                transform: translateX(-50%) translateY(-7px);
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <audio id="background-music" src="musik.mp3" loop></audio>
+
+    <div id="padlock-page" class="page">
+        <div class="container">
+            <div class="title">Masukkan Tanggal yang Benar...</div>
+            <div class="padlock">
+                <div class="shackle"></div><div class="heart"><div class="gloss"></div></div>
+                <div class="dials-container">
+                    <div class="dial"><button class="arrow-btn" data-control="day-up">▲</button><div class="number-viewport"><div class="number-reel" id="day-display">01</div></div><button class="arrow-btn" data-control="day-down">▼</button></div>
+                    <div class="dial"><button class="arrow-btn" data-control="month-up">▲</button><div class="number-viewport"><div class="number-reel" id="month-display">01</div></div><button class="arrow-btn" data-control="month-down">▼</button></div>
+                    <div class="dial"><button class="arrow-btn" data-control="year-up">▲</button><div class="number-viewport"><div class="number-reel" id="year-display">23</div></div><button class="arrow-btn" data-control="year-down">▼</button></div>
+                </div>
+            </div>
+            <div class="hint">Petunjuk: Tanggal kita pertama bertemu</div>
+        </div>
+    </div>
+
+    <div id="carousel-page" class="page hidden">
+        <div class="carousel-container">
+            <div class="header-text">galeri angel paling cantik</div>
+            <div class="sub-text">Tú haces mi mundo brillar</div>
+            
+            <div class="carousel-group">
+                <div class="scene">
+                    <div class="carousel">
+                        <div class="carousel-panel" style="background-image: url('atas1.jpg');" data-img="atas1.jpg"></div>
+                        <div class="carousel-panel" style="background-image: url('atas2.jpg');" data-img="atas2.jpg"></div>
+                        <div class="carousel-panel" style="background-image: url('atas3.jpg');" data-img="atas3.jpg"></div>
+                        <div class="carousel-panel" style="background-image: url('atas4.jpg');" data-img="atas4.jpg"></div>
+                        <div class="carousel-panel" style="background-image: url('atas5.jpg');" data-img="atas5.jpg"></div>
+                    </div>
+                </div>
+
+                <div class="scene">
+                    <div class="carousel">
+                        <div class="carousel-panel" style="background-image: url('tengah1.jpg');" data-img="tengah1.jpg"></div>
+                        <div class="carousel-panel" style="background-image: url('tengah2.jpg');" data-img="tengah2.jpg"></div>
+                        <div class="carousel-panel" style="background-image: url('tengah3.jpg');" data-img="tengah3.jpg"></div>
+                        <div class="carousel-panel" style="background-image: url('tengah4.jpg');" data-img="tengah4.jpg"></div>
+                        <div class="carousel-panel" style="background-image: url('tengah5.jpg');" data-img="tengah5.jpg"></div>
+                    </div>
+                </div>
+
+                <div class="scene">
+                    <div class="carousel">
+                        <div class="carousel-panel" style="background-image: url('bawah1.jpg');" data-img="bawah1.jpg"></div>
+                        <div class="carousel-panel" style="background-image: url('bawah2.jpg');" data-img="bawah2.jpg"></div>
+                        <div class="carousel-panel" style="background-image: url('bawah3.jpg');" data-img="bawah3.jpg"></div>
+                        <div class="carousel-panel" style="background-image: url('bawah4.jpg');" data-img="bawah4.jpg"></div>
+                        <div class="carousel-panel" style="background-image: url('bawah5.jpg');" data-img="bawah5.jpg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button id="goToTimerBtn" class="nav-arrow-btn">▼</button>
+    </div>
+
+    <div id="timer-page" class="page hidden">
+        <div class="timer-page-content" style="display: flex; flex-direction: column; align-items: center;">
+            <div class="hearts-bg" id="hearts-bg"></div>
+            <div class="timer-title">Waktu Kita Bersama</div>
+            <div class="profile-pic">
+                <img src="profil.jpg" alt="Foto Profil">
+            </div>
+            <div class="timer-grid">
+                <div class="timer-box"><span id="years" class="timer-number">0</span><span class="timer-label">Tahun</span></div>
+                <div class="timer-box"><span id="months" class="timer-number">0</span><span class="timer-label">Bulan</span></div>
+                <div class="timer-box"><span id="days" class="timer-number">0</span><span class="timer-label">Hari</span></div>
+                <div class="timer-box"><span id="hours" class="timer-number">0</span><span class="timer-label">Jam</span></div>
+                <div class="timer-box"><span id="minutes" class="timer-number">0</span><span class="timer-label">Menit</span></div>
+                <div class="timer-box"><span id="seconds" class="timer-number">0</span><span class="timer-label">Detik</span></div>
+            </div>
+            <div class="letter-container" id="letter-container">
+                <div class="letter-icon">💌</div>
+            </div>
+            <div class="message-box" id="message-box">
+                <p>Ini adalah pesan rahasia untukmu. Terima kasih sudah menjadi bagian terindah dalam hidupku. Aku sayang kamu!</p>
+            </div>
+        </div>
+        <button id="goToCarouselBtn" class="nav-arrow-btn">▲</button>
+    </div>
+    
+    <div id="fullscreen-viewer">
+        <button id="back-button">Kembali</button>
+        <img id="fullscreen-image" src="" alt="Gambar Fullscreen">
+    </div>
+
+    <script>
+        const relationshipStartDate = new Date('2022-02-14T00:00:00');
+        const correctDay = 1, correctMonth = 1, correctYear = 23;
+        let currentDay = 1, currentMonth = 1, currentYear = 23;
+        const padlockPage = document.getElementById('padlock-page');
+        const carouselPage = document.getElementById('carousel-page');
+        const timerPage = document.getElementById('timer-page');
+        const dayDisplay = padlockPage.querySelector('#day-display');
+        const monthDisplay = padlockPage.querySelector('#month-display');
+        const yearDisplay = padlockPage.querySelector('#year-display');
+        const backgroundMusic = document.getElementById('background-music');
+
+        // --- MENAMBAHKAN VARIABEL UNTUK TOMBOL BARU ---
+        const goToTimerBtn = document.getElementById('goToTimerBtn');
+        const goToCarouselBtn = document.getElementById('goToCarouselBtn');
+
+        function animateDial(element, newNumber, direction) {
+            if (element.textContent === String(newNumber).padStart(2, '0')) return;
+            const newEl = document.createElement('div');
+            newEl.textContent = String(newNumber).padStart(2, '0');
+            element.style.transition = 'none';
+            element.style.transform = direction === 'up' ? 'translateY(100%)' : 'translateY(-100%)';
+            element.innerHTML = '';
+            element.appendChild(newEl);
+            setTimeout(() => {
+                element.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+                element.style.transform = 'translateY(0)';
+            }, 20);
+        }
+
+        function checkCombination() {
+            if (currentDay === correctDay && currentMonth === correctMonth && currentYear === correctYear) {
+                Swal.fire({
+                    title: 'Gembok Terbuka! ❤️', icon: 'success', confirmButtonText: 'Masuk'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        padlockPage.classList.add('hidden');
+                        carouselPage.classList.remove('hidden');
+                    }
+                });
+            }
+        }
+        
+        dayDisplay.textContent = String(currentDay).padStart(2, '0');
+        monthDisplay.textContent = String(currentMonth).padStart(2, '0');
+        yearDisplay.textContent = String(currentYear).padStart(2, '0');
+
+        const actions = {
+            'day-up': () => { currentDay = currentDay >= 31 ? 1 : currentDay + 1; animateDial(dayDisplay, currentDay, 'down'); },
+            'day-down': () => { currentDay = currentDay <= 1 ? 31 : currentDay - 1; animateDial(dayDisplay, currentDay, 'up'); },
+            'month-up': () => { currentMonth = currentMonth >= 12 ? 1 : currentMonth + 1; animateDial(monthDisplay, currentMonth, 'down'); },
+            'month-down': () => { currentMonth = currentMonth <= 1 ? 12 : currentMonth - 1; animateDial(monthDisplay, currentMonth, 'up'); },
+            'year-up': () => { currentYear = currentYear >= 99 ? 0 : currentYear + 1; animateDial(yearDisplay, currentYear, 'down'); },
+            'year-down': () => { currentYear = currentYear <= 0 ? 99 : currentYear - 1; animateDial(yearDisplay, currentYear, 'up'); }
+        };
+
+        let intervalId = null;
+        document.querySelectorAll('.arrow-btn').forEach(button => {
+            const action = actions[button.dataset.control];
+            const stop = () => { if (intervalId) { clearInterval(intervalId); intervalId = null; } checkCombination(); };
+            const start = (e) => { e.preventDefault(); stop(); action(); intervalId = setInterval(action, 120); };
+            button.addEventListener('mousedown', start);
+            button.addEventListener('mouseup', stop);
+            button.addEventListener('mouseleave', stop);
+            button.addEventListener('touchstart', start);
+            button.addEventListener('touchend', stop);
+        });
+        
+        const carousels = [];
+        const easing = 0.08;
+
+        document.querySelectorAll('.carousel').forEach((carouselEl, index) => {
+            const sceneEl = carouselEl.parentElement;
+            const carouselObj = {
+                element: carouselEl,
+                isDragging: false,
+                startX: 0,
+                startRotation: 0,
+                currentRotation: 0,
+                targetRotation: 0,
+                autoRotateSpeed: 0.15 - (index * 0.03) 
+            };
+            carousels.push(carouselObj);
+
+            const onPointerDown = (e) => {
+                carouselObj.isDragging = true;
+                carouselObj.startX = e.clientX || e.touches[0].clientX;
+                carouselObj.startRotation = carouselObj.targetRotation;
+            };
+            const onPointerMove = (e) => {
+                if (!carouselObj.isDragging) return;
+                const x = e.clientX || e.touches[0].clientX;
+                const deltaX = x - carouselObj.startX;
+                const rotationChange = deltaX * 0.3;
+                carouselObj.targetRotation = carouselObj.startRotation + rotationChange;
+            };
+            const onPointerUp = () => {
+                carouselObj.isDragging = false;
+            };
+            
+            sceneEl.addEventListener('mousedown', onPointerDown);
+            sceneEl.addEventListener('touchstart', onPointerDown);
+            window.addEventListener('mousemove', onPointerMove);
+            window.addEventListener('touchmove', onPointerMove);
+            window.addEventListener('mouseup', onPointerUp);
+            window.addEventListener('touchend', onPointerUp);
+        });
+        
+        function animationLoop() {
+            carousels.forEach((carousel, index) => {
+                if (!carousel.isDragging) {
+                    if (index === 1) { 
+                        carousel.targetRotation += carousel.autoRotateSpeed;
+                    } else {
+                        carousel.targetRotation -= carousel.autoRotateSpeed;
+                    }
+                }
+                let diff = carousel.targetRotation - carousel.currentRotation;
+                if (Math.abs(diff) > 0.01) {
+                    carousel.currentRotation += diff * easing;
+                }
+                carousel.element.style.transform = `rotateY(${carousel.currentRotation}deg)`;
+            });
+            requestAnimationFrame(animationLoop);
+        }
+
+        function updateTimer() {
+            const now = new Date();
+            let start = new Date(relationshipStartDate);
+            let years = now.getFullYear() - start.getFullYear();
+            let months = now.getMonth() - start.getMonth();
+            let days = now.getDate() - start.getDate();
+            let hours = now.getHours() - start.getHours();
+            let minutes = now.getMinutes() - start.getMinutes();
+            let seconds = now.getSeconds() - start.getSeconds();
+            if (seconds < 0) { minutes--; seconds += 60; }
+            if (minutes < 0) { hours--; minutes += 60; }
+            if (hours < 0) { days--; hours += 24; }
+            if (days < 0) {
+                months--;
+                const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+                days += prevMonth.getDate();
+            }
+            if (months < 0) { years--; months += 12; }
+            document.getElementById('years').textContent = years;
+            document.getElementById('months').textContent = months;
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours;
+            document.getElementById('minutes').textContent = minutes;
+            document.getElementById('seconds').textContent = seconds;
+        }
+        setInterval(updateTimer, 1000);
+        
+        // --- MEMBUAT FUNGSI UNTUK PERPINDAHAN HALAMAN ---
+        function showTimerPage() {
+            carouselPage.classList.add('hidden');
+            timerPage.classList.remove('hidden');
+            if (backgroundMusic && backgroundMusic.paused) {
+                backgroundMusic.play().catch(err => console.log("Gagal melanjutkan musik."));
+            }
+        }
+
+        function showCarouselPage() {
+            timerPage.classList.add('hidden');
+            carouselPage.classList.remove('hidden');
+            if (backgroundMusic && backgroundMusic.paused) {
+                backgroundMusic.play().catch(err => console.log("Gagal melanjutkan musik."));
+            }
+        }
+
+        // --- MENGAKTIFKAN TOMBOL DAN SWIPE ---
+        goToTimerBtn.addEventListener('click', showTimerPage);
+        goToCarouselBtn.addEventListener('click', showCarouselPage);
+        
+        let touchStartY = 0;
+        carouselPage.addEventListener('touchstart', e => { 
+            if (!e.target.closest('.carousel-panel') && !e.target.closest('.nav-arrow-btn')) {
+                touchStartY = e.touches[0].clientY; 
+            }
+        });
+        carouselPage.addEventListener('touchend', e => {
+            if (!e.target.closest('.carousel-panel') && !e.target.closest('.nav-arrow-btn')) {
+                let touchEndY = e.changedTouches[0].clientY;
+                if (touchStartY - touchEndY > 30) {
+                    showTimerPage();
+                }
+            }
+        });
+
+        timerPage.addEventListener('touchstart', e => { 
+             if (!e.target.closest('.nav-arrow-btn')) {
+                touchStartY = e.touches[0].clientY; 
+            }
+        });
+        timerPage.addEventListener('touchend', e => {
+             if (!e.target.closest('.nav-arrow-btn')) {
+                let touchEndY = e.changedTouches[0].clientY;
+                // BONUS: Logika swipe down (dari atas ke bawah) untuk kembali
+                if (touchStartY - touchEndY < -50) {
+                    showCarouselPage();
+                }
+            }
+        });
+        
+        const heartsBg = document.getElementById('hearts-bg');
+        for(let i=0; i<20; i++) {
+            const heart = document.createElement('div');
+            heart.className = 'heart-bg';
+            heart.textContent = '❤️';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 5 + 10) + 's';
+            heart.style.animationDelay = Math.random() * 10 + 's';
+            heartsBg.appendChild(heart);
+        }
+        
+        const letterContainer = document.getElementById('letter-container');
+        const messageBox = document.getElementById('message-box');
+        letterContainer.addEventListener('click', () => {
+            messageBox.classList.toggle('open');
+        });
+
+        animationLoop();
+        updateTimer();
+
+        const fullscreenViewer = document.getElementById('fullscreen-viewer');
+        const fullscreenImage = document.getElementById('fullscreen-image');
+        const backButton = document.getElementById('back-button');
+
+        document.querySelectorAll('.carousel-panel').forEach(panel => {
+            panel.addEventListener('click', (e) => {
+                if (Math.abs(e.clientX - (e.touches ? e.touches[0].clientX : e.clientX)) < 5 && Math.abs(e.clientY - (e.touches ? e.touches[0].clientY : e.clientY)) < 5) {
+                    const imageUrl = panel.dataset.img;
+                    fullscreenImage.src = imageUrl;
+                    fullscreenViewer.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            });
+        });
+
+        backButton.addEventListener('click', () => {
+            fullscreenViewer.classList.remove('active');
+            document.body.style.overflow = 'auto'; 
+        });
+
+        fullscreenViewer.addEventListener('click', (e) => {
+            if (e.target.id === 'fullscreen-viewer') {
+                fullscreenViewer.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        });
+
+        document.addEventListener('click', function() {
+            if (backgroundMusic && backgroundMusic.paused) {
+                backgroundMusic.play().catch(error => {
+                    console.log("Musik gagal diputar oleh browser:", error);
+                });
+            }
+        });
+
+    </script>
+</body>
+</html>
